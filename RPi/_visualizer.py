@@ -22,14 +22,12 @@ class PinVisualizer():
         self.is_setup = True
 
     def draw(self, mode):
+        #TODO visualize setuped pins
         if self.is_gpio:
-            if self.is_setup:
-                if mode:
-                    color = 'red'   #high
-                else:
-                    color = 'blue'  #low
+            if mode:
+                color = 'red'   #high
             else:
-                color = 'skyblue'
+                color = 'blue'  #low
         else:
             color = 'gray'      #not a GPIO
         rect = matplotlib.patches.Rectangle(\
