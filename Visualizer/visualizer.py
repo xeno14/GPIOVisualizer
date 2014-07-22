@@ -3,6 +3,29 @@
 import sys
 from PyQt4.QtGui import QApplication,QWidget
 from PyQt4 import QtCore, QtGui
+import time
+import subprocess
+import websocket
+
+class Watcher(QtCore.QThread):
+    """execute subprocess and recieve stdout then send signal
+    
+    RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
+    親プロセスのidはos.getppid()で取れる．
+    """
+
+    def __init__(self, parent=None):
+        super(Watcher, self).__init__(parent)
+
+    def setup(self):
+        self.is_stoped = False
+
+    def stop(self):
+        self.is_stoped = True
+
+    def run(self):
+        """recieve signal from child process"""
+        pass
 
 class GPIOVisualizer(QtGui.QWidget):
 
@@ -25,12 +48,16 @@ class GPIOVisualizer(QtGui.QWidget):
         super(GPIOVisualizer, self).__init__()
         
         self.initUI()
+
+        self.wathcer = Watcher()
+        self.wathcer.setup()
+        self.wathcer.start()
         
     def initUI(self):
         
         grid = QtGui.QGridLayout()
         self.setLayout(grid)
-        self.pinWidgets = [None] * 25
+        self.pinWidgets = [None] * 30
         
         index = 0
         for pin in self.PINS:
@@ -97,6 +124,7 @@ class PinWidget(QtGui.QWidget):
         painter.setBrush(QtGui.QColor(255, 255, 255))
         painter.drawRect(2, 2, self.WIDTH-4, self.HEIGHT-4)
 
+        # gpio
         if self.is_gpio:
             if self.state:
                 painter.setBrush(QtGui.QColor(200, 0, 0))
