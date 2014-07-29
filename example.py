@@ -8,8 +8,11 @@ if __name__ == '__main__':
     GPIO.setup(4, GPIO.OUT)
     GPIO.setup(7, GPIO.OUT)
 
+    count = 1
     try:
         while True:
+            print "loop", count
+            count += 1
             GPIO.output(4, True)
             time.sleep(0.5)
             GPIO.output(7, True)

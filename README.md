@@ -13,12 +13,18 @@ Each color indicates:
 
 ## Usage
 
-Place `RPi` into your working directory. Visualization starts automatically.
+Place `RPi` into your working directory. 
 
 ## ATTENTION
 
 - When you run on Raspberry Pi, RPi directory in this repository should be removed.
-- During running, matplotlib window looks freezing. **If you have an idea to fix it or of another way to visualize, please tell me**
+
+# TODO
+
+- file(python) selection
+- console window
+  - stdout
+  - stderr
 
 ## License
 

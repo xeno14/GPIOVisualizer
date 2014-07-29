@@ -5,27 +5,42 @@ from PyQt4.QtGui import QApplication,QWidget
 from PyQt4 import QtCore, QtGui
 import time
 import subprocess
-import websocket
 
 class Watcher(QtCore.QThread):
     """execute subprocess and recieve stdout then send signal
     
     RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
-    親プロセスのidはos.getppid()で取れる．
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, visualizer, parent=None):
         super(Watcher, self).__init__(parent)
+        self.visualizer = visualizer
 
-    def setup(self):
-        self.is_stoped = False
+    def setup(self, py):
+        self.stoped = True 
+        self.py = py
+        print py
 
     def stop(self):
-        self.is_stoped = True
+        self.stoped = False 
 
     def run(self):
-        """recieve signal from child process"""
-        pass
+        """recieve stdout from child process"""
+        proc = subprocess.Popen(['python', self.py], stdout=subprocess.PIPE,
+                 stderr=subprocess.PIPE)
+        for line in iter(proc.stdout.readline,''):
+            line = line.rstrip()
+            splited = line.split(' ')
+            if splited:
+                prefix = splited[0]
+                if prefix == "__GPIO__":
+                    channel = int(splited[1])
+                    state = True if splited[2] == "1" else False
+                else:
+                    print line
+                    continue
+            self.visualizer.output(channel, state)
+            self.visualizer.repaint()
 
 class GPIOVisualizer(QtGui.QWidget):
 
@@ -49,8 +64,8 @@ class GPIOVisualizer(QtGui.QWidget):
         
         self.initUI()
 
-        self.wathcer = Watcher()
-        self.wathcer.setup()
+        self.wathcer = Watcher(self)
+        self.wathcer.setup('example.py')
         self.wathcer.start()
         
     def initUI(self):
@@ -68,6 +83,7 @@ class GPIOVisualizer(QtGui.QWidget):
             label_boardpin = self.createLabel(str(index+1))
             label_boardpin.setMargin(2)
             pinWidget = PinWidget(self, gpio)
+            self.pinWidgets[gpio] = pinWidget
 
             row = index/2
             if index%2 == 0:
@@ -91,6 +107,10 @@ class GPIOVisualizer(QtGui.QWidget):
         label.setText(name)
         label.setAlignment(QtCore.Qt.AlignCenter)
         return label
+
+    def output(self, channel, state):
+        if self.pinWidgets is not None:
+            self.pinWidgets[channel].state = state
 
 class PinWidget(QtGui.QWidget):
 
