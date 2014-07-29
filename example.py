@@ -8,15 +8,15 @@ if __name__ == '__main__':
     GPIO.setup(4, GPIO.OUT)
     GPIO.setup(7, GPIO.OUT)
 
+    count = 1
     try:
         while True:
+            count += 1
+            print "GPIO4 on"
             GPIO.output(4, True)
             time.sleep(0.5)
-            GPIO.output(7, True)
-            time.sleep(0.5)
+            print "GPIO4 off"
             GPIO.output(4, False)
-            time.sleep(0.5)
-            GPIO.output(7, False)
             time.sleep(0.5)
     except KeyboardInterrupt:
         print("detect key interrupt\n")
