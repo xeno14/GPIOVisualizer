@@ -3,6 +3,9 @@
 from PyQt4 import QtCore, QtGui
 import subprocess
 import sys
+import os
+import sip
+
 
 if sys.platform.startswith("darwin"):
     import Foundation
@@ -55,43 +58,46 @@ class Watcher(QtCore.QThread):
 
 class GPIOVisualizer(QtGui.QWidget):
 
-    PINS = [('3V3',     -1), ('5V0', -1),
-            ('GPIO_2',   2), ('5V0', -1),
-            ('GPIO_3',   3), ('GND', -1),
+    PINS = [('3V3',     -1), ('5V0',     -1),
+            ('GPIO_2',   2), ('5V0',     -1),
+            ('GPIO_3',   3), ('GND',     -1),
             ('GPIO_4',   4), ('GPIO_14', 14),
             ('GND',     -1), ('GPIO_15', 15),
             ('GPIO_17', 17), ('GPIO_18', 18),
-            ('GPIO_27', 27), ('GND', -1),
+            ('GPIO_27', 27), ('GND',     -1),
             ('GPIO_22', 22), ('GPIO_23', 23),
-            ('3V3', -1),     ('GPIO_24', 24),
-            ('GPIO_10', 10), ('GND', -1),
+            ('3V3',     -1), ('GPIO_24', 24),
+            ('GPIO_10', 10), ('GND',     -1),
             ('GPIO_9',   9), ('GPIO_25', 25),
-            ('GPIO_11', 11), ('GPIO_8', 8),
-            ('GND', -1),     ('GPIO_7', 7),
+            ('GPIO_11', 11), ('GPIO_8',   8),
+            ('GND',     -1), ('GPIO_7',   7),
             ]
 
     def __init__(self):
         super(GPIOVisualizer, self).__init__()
         self.initUI()
         self.wathcer = Watcher(self)
+        self.py = ""
 
-    def start(self, py):
+    def start(self):
         """start subprocess
 
         @param py python to run
         """
-        print "start", py, "!!!!!"
-        self.wathcer.setup(py)
-        self.wathcer.start()
-
+        if self.py:
+            print "start", self.py, "!!!!!"
+            self.wathcer.setup(self.py)
+            self.wathcer.start()
 
     def initUI(self):
+        self.mainLayout = QtGui.QVBoxLayout()
 
         grid = QtGui.QGridLayout()
         self.setLayout(grid)
         self.pinWidgets = [None] * 30
 
         index = 0
+        # place pins in the grid
         for pin in self.PINS:
             name = pin[0]
             gpio = pin[1]
@@ -114,18 +120,40 @@ class GPIOVisualizer(QtGui.QWidget):
 
             index += 1
 
-        self.move(300, 150)
-        self.setGeometry(0, 0, 350, 400)
+        #file open button
+        self.openFileButton = QtGui.QPushButton('open file')
+        self.connect(self.openFileButton,
+                     QtCore.SIGNAL("clicked()"), self.openFile)
+        grid.addWidget(self.openFileButton, 0, 6, 1, 1)
+
+        # label displaying filename of running as subprocess
+        self.labelFileName = QtGui.QLabel("")
+        grid.addWidget(self.labelFileName, 1, 6, 1, 1)
+
+        # self.move(300, 150)
+        self.setGeometry(0, 0, 640, 480)
         self.setWindowTitle('Visualizer')
         self.show()
 
+    def openFile(self):
+        """select a file to run as subprocess"""
+        filename = QtGui.QFileDialog.getOpenFileName(
+                self, 'Open file', os.path.expanduser('~'))
+        # self.labelFileName.setText(filename)
+        filename = str(filename)        #convert to normal string
+        self.py = filename              #start subprocess!!
+        self.labelFileName.setText(os.path.basename(filename))
+        self.start()
+
     def createLabel(self, name):
+        """create label pin's description"""
         label = QtGui.QLabel(self)
         label.setText(name)
         label.setAlignment(QtCore.Qt.AlignCenter)
         return label
 
     def output(self, channel, state):
+        """change pin's state and repaint"""
         if self.pinWidgets is not None:
             self.pinWidgets[channel].state = state
             self.pinWidgets[channel].repaint()
