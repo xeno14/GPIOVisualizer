@@ -2,6 +2,10 @@
 
 from PyQt4 import QtCore, QtGui
 import subprocess
+import sys
+
+if sys.platform.startswith("darwin"):
+    import Foundation
 
 
 class Watcher(QtCore.QThread):
@@ -15,18 +19,27 @@ class Watcher(QtCore.QThread):
         self.visualizer = visualizer
 
     def setup(self, py):
-        self.stoped = True
+        """ setup python running on subprocess
+
+        @param py python to run
+        """
+        self.stoped = False
         self.py = py
-        print py
 
     def stop(self):
-        self.stoped = False
+        self.stoped = True
 
     def run(self):
         """recieve stdout from child process"""
         proc = subprocess.Popen(['python', self.py],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # for memory leak problem
+        if sys.platform.startswith("darwin"):
+            Foundation.NSAutoreleasePool.alloc().init()
+
         for line in iter(proc.stdout.readline, ''):
+            if self.stoped:
+                return
             line = line.rstrip()
             splited = line.split(' ')
             if splited:
@@ -61,8 +74,16 @@ class GPIOVisualizer(QtGui.QWidget):
         super(GPIOVisualizer, self).__init__()
         self.initUI()
         self.wathcer = Watcher(self)
-        self.wathcer.setup('example.py')
+
+    def start(self, py):
+        """start subprocess
+
+        @param py python to run
+        """
+        print "start", py, "!!!!!"
+        self.wathcer.setup(py)
         self.wathcer.start()
+
 
     def initUI(self):
 
