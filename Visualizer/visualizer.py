@@ -21,26 +21,23 @@ class Watcher(QtCore.QThread):
         super(Watcher, self).__init__(parent)
         self.visualizer = visualizer
 
-    def setup(self, py):
+    def setup(self, proc):
         """ setup python running on subprocess
 
         @param py python to run
         """
         self.stoped = False
-        self.py = py
+        self.proc = proc
 
     def stop(self):
         self.stoped = True
 
     def run(self):
         """recieve stdout from child process"""
-        proc = subprocess.Popen(['python', self.py],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # for memory leak problem
         if sys.platform.startswith("darwin"):
             Foundation.NSAutoreleasePool.alloc().init()
-
-        for line in iter(proc.stdout.readline, ''):
+        for line in iter(self.proc.stdout.readline, ''):
             if self.stoped:
                 return
             line = line.rstrip()
@@ -55,6 +52,39 @@ class Watcher(QtCore.QThread):
                     print line
                     self.visualizer.stdout(line)
                     continue
+
+
+class ErrWatcher(QtCore.QThread):
+    """execute subprocess and recieve stdout then send signal
+
+    RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
+    """
+
+    def __init__(self, visualizer, parent=None):
+        super(ErrWatcher, self).__init__(parent)
+        self.visualizer = visualizer
+
+    def setup(self, proc):
+        """ setup python running on subprocess
+
+        @param py python to run
+        """
+        self.stoped = False
+        self.proc = proc
+
+    def stop(self):
+        self.stoped = True
+
+    def run(self):
+        """recieve stderr from child process"""
+        # for memory leak problem
+        if sys.platform.startswith("darwin"):
+            Foundation.NSAutoreleasePool.alloc().init()
+        for line in iter(self.proc.stderr.readline, ''):
+            if self.stoped:
+                return
+            line = line.rstrip()
+            self.visualizer.stderr(line)
 
 
 class GPIOVisualizer(object):
@@ -78,6 +108,7 @@ class GPIOVisualizer(object):
         super(GPIOVisualizer, self).__init__()
         self.mainwindow = mainwindow
         self.wathcer = Watcher(self)
+        self.err_watcher = ErrWatcher(self)
 
     def start(self):
         """start subprocess
@@ -86,11 +117,16 @@ class GPIOVisualizer(object):
         """
         if self.py:
             print "start", self.py, "!!!!!"
-            self.wathcer.setup(self.py)
+            proc = subprocess.Popen(['python', self.py],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            self.wathcer.setup(proc)
             self.wathcer.start()
+            self.err_watcher.setup(proc)
+            self.err_watcher.start()
 
     def createGPIO(self, widget, grid):
-
+        """place pins in grid"""
         self.pinWidgets = [None] * 30
 
         index = 0
@@ -126,6 +162,12 @@ class GPIOVisualizer(object):
         self.textEdit = qtextedit
 
     def stdout(self, line):
+        self.textEdit.append(line)
+
+    def stderr(self, line):
+        """
+        @todo handle stderr outputs
+        """
         self.textEdit.append(line)
 
     def openFile(self):

@@ -20,5 +20,4 @@ if __name__ == '__main__':
             time.sleep(0.5)
     except KeyboardInterrupt:
         print("detect key interrupt\n")
- 
-    GPIO.cleanup()
+        GPIO.cleanup()
