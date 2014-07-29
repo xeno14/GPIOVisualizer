@@ -50,13 +50,14 @@ class Watcher(QtCore.QThread):
                 if prefix == "__GPIO__":
                     channel = int(splited[1])
                     state = True if splited[2] == "1" else False
+                    self.visualizer.output(channel, state)
                 else:
                     print line
+                    self.visualizer.stdout(line)
                     continue
-            self.visualizer.output(channel, state)
 
 
-class GPIOVisualizer(QtGui.QWidget):
+class GPIOVisualizer(object):
 
     PINS = [('3V3',     -1), ('5V0',     -1),
             ('GPIO_2',   2), ('5V0',     -1),
@@ -73,11 +74,10 @@ class GPIOVisualizer(QtGui.QWidget):
             ('GND',     -1), ('GPIO_7',   7),
             ]
 
-    def __init__(self):
+    def __init__(self, mainwindow):
         super(GPIOVisualizer, self).__init__()
-        self.initUI()
+        self.mainwindow = mainwindow
         self.wathcer = Watcher(self)
-        self.py = ""
 
     def start(self):
         """start subprocess
@@ -89,11 +89,8 @@ class GPIOVisualizer(QtGui.QWidget):
             self.wathcer.setup(self.py)
             self.wathcer.start()
 
-    def initUI(self):
-        self.mainLayout = QtGui.QVBoxLayout()
+    def createGPIO(self, widget, grid):
 
-        grid = QtGui.QGridLayout()
-        self.setLayout(grid)
         self.pinWidgets = [None] * 30
 
         index = 0
@@ -105,7 +102,7 @@ class GPIOVisualizer(QtGui.QWidget):
             label_pin = self.createLabel(name)
             label_boardpin = self.createLabel(str(index+1))
             label_boardpin.setMargin(2)
-            pinWidget = PinWidget(self, gpio)
+            pinWidget = PinWidget(widget, gpio)
             self.pinWidgets[gpio] = pinWidget
 
             row = index/2
@@ -120,25 +117,21 @@ class GPIOVisualizer(QtGui.QWidget):
 
             index += 1
 
-        #file open button
-        self.openFileButton = QtGui.QPushButton('open file')
-        self.connect(self.openFileButton,
-                     QtCore.SIGNAL("clicked()"), self.openFile)
-        grid.addWidget(self.openFileButton, 0, 6, 1, 1)
+    def setButton(self, qbutton, qlabel):
+        self.mainwindow.connect(qbutton, QtCore.SIGNAL("clicked()"),
+                                self.openFile)
+        self.labelFileName = qlabel
 
-        # label displaying filename of running as subprocess
-        self.labelFileName = QtGui.QLabel("")
-        grid.addWidget(self.labelFileName, 1, 6, 1, 1)
+    def setTextEdit(self, qtextedit):
+        self.textEdit = qtextedit
 
-        # self.move(300, 150)
-        self.setGeometry(0, 0, 640, 480)
-        self.setWindowTitle('Visualizer')
-        self.show()
+    def stdout(self, line):
+        self.textEdit.append(line)
 
     def openFile(self):
         """select a file to run as subprocess"""
         filename = QtGui.QFileDialog.getOpenFileName(
-                self, 'Open file', os.path.expanduser('~'))
+                self.mainwindow, 'Open file', os.path.expanduser('~'))
         # self.labelFileName.setText(filename)
         filename = str(filename)        #convert to normal string
         self.py = filename              #start subprocess!!
@@ -147,8 +140,7 @@ class GPIOVisualizer(QtGui.QWidget):
 
     def createLabel(self, name):
         """create label pin's description"""
-        label = QtGui.QLabel(self)
-        label.setText(name)
+        label = QtGui.QLabel(name)
         label.setAlignment(QtCore.Qt.AlignCenter)
         return label
 
