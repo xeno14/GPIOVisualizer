@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import sys
-from PyQt4.QtGui import QApplication,QWidget
 from PyQt4 import QtCore, QtGui
-import time
 import subprocess
+
 
 class Watcher(QtCore.QThread):
     """execute subprocess and recieve stdout then send signal
-    
+
     RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
     """
 
@@ -17,18 +15,18 @@ class Watcher(QtCore.QThread):
         self.visualizer = visualizer
 
     def setup(self, py):
-        self.stoped = True 
+        self.stoped = True
         self.py = py
         print py
 
     def stop(self):
-        self.stoped = False 
+        self.stoped = False
 
     def run(self):
         """recieve stdout from child process"""
-        proc = subprocess.Popen(['python', self.py], stdout=subprocess.PIPE,
-                 stderr=subprocess.PIPE)
-        for line in iter(proc.stdout.readline,''):
+        proc = subprocess.Popen(['python', self.py],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in iter(proc.stdout.readline, ''):
             line = line.rstrip()
             splited = line.split(' ')
             if splited:
@@ -40,7 +38,7 @@ class Watcher(QtCore.QThread):
                     print line
                     continue
             self.visualizer.output(channel, state)
-            self.visualizer.repaint()
+
 
 class GPIOVisualizer(QtGui.QWidget):
 
@@ -61,19 +59,17 @@ class GPIOVisualizer(QtGui.QWidget):
 
     def __init__(self):
         super(GPIOVisualizer, self).__init__()
-        
         self.initUI()
-
         self.wathcer = Watcher(self)
         self.wathcer.setup('example.py')
         self.wathcer.start()
-        
+
     def initUI(self):
-        
+
         grid = QtGui.QGridLayout()
         self.setLayout(grid)
         self.pinWidgets = [None] * 30
-        
+
         index = 0
         for pin in self.PINS:
             name = pin[0]
@@ -86,7 +82,7 @@ class GPIOVisualizer(QtGui.QWidget):
             self.pinWidgets[gpio] = pinWidget
 
             row = index/2
-            if index%2 == 0:
+            if index % 2 == 0:
                 grid.addWidget(label_pin, row, 0, 1, 1)
                 grid.addWidget(label_boardpin, row, 1, 1, 1)
                 grid.addWidget(pinWidget, row, 2, 1, 2)
@@ -96,7 +92,7 @@ class GPIOVisualizer(QtGui.QWidget):
                 grid.addWidget(pinWidget, row, 3, 1, 2)
 
             index += 1
-            
+
         self.move(300, 150)
         self.setGeometry(0, 0, 350, 400)
         self.setWindowTitle('Visualizer')
@@ -111,6 +107,8 @@ class GPIOVisualizer(QtGui.QWidget):
     def output(self, channel, state):
         if self.pinWidgets is not None:
             self.pinWidgets[channel].state = state
+            self.pinWidgets[channel].repaint()
+
 
 class PinWidget(QtGui.QWidget):
 
@@ -125,7 +123,7 @@ class PinWidget(QtGui.QWidget):
         self.setFixedWidth(self.WIDTH)
         self.setFixedHeight(self.HEIGHT)
         self.is_gpio = True if gpio >= 0 else False
-    
+
     def paintEvent(self, e):
         painter = QtGui.QPainter()
         painter.begin(self)
@@ -137,7 +135,7 @@ class PinWidget(QtGui.QWidget):
         painter.setPen(color)
 
         # draw frame
-        painter.setBrush(QtGui.QColor(100,100,100))
+        painter.setBrush(QtGui.QColor(100, 100, 100))
         painter.drawRect(0, 0, self.WIDTH, self.HEIGHT)
 
         # fill inside white
