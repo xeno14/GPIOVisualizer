@@ -12,10 +12,7 @@ if sys.platform.startswith("darwin"):
 
 
 class Watcher(QtCore.QThread):
-    """execute subprocess and recieve stdout then send signal
-
-    RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
-    """
+    """execute subprocess and recieve stdout then send it to visualizer"""
 
     def __init__(self, visualizer, parent=None):
         super(Watcher, self).__init__(parent)
@@ -55,10 +52,7 @@ class Watcher(QtCore.QThread):
 
 
 class ErrWatcher(QtCore.QThread):
-    """execute subprocess and recieve stdout then send signal
-
-    RPi.GPIOでoutputの箇所で親プロセスに向かってシグナル？を発信する
-    """
+    """execute subprocess and recieve stderr then send it to visualizer"""
 
     def __init__(self, visualizer, parent=None):
         super(ErrWatcher, self).__init__(parent)
@@ -165,10 +159,11 @@ class GPIOVisualizer(object):
         self.textEdit.append(line)
 
     def stderr(self, line):
+        """append line to textedit in red
         """
-        @todo handle stderr outputs
-        """
+        self.textEdit.setTextColor(QtGui.QColor(0xff,0,0))
         self.textEdit.append(line)
+        self.textEdit.setTextColor(QtGui.QColor(0,0,0))
 
     def openFile(self):
         """select a file to run as subprocess"""
