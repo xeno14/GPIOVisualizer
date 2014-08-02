@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'visualizer.ui'
 #
-# Created: Sun Aug  3 02:48:29 2014
+# Created: Sun Aug  3 03:09:25 2014
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -37,10 +37,10 @@ class Ui_MainWindow(object):
         self.subprocLabel.setText(_fromUtf8(""))
         self.subprocLabel.setObjectName(_fromUtf8("subprocLabel"))
         self.argvTextEdit = QtGui.QPlainTextEdit(self.centralwidget)
-        self.argvTextEdit.setGeometry(QtCore.QRect(610, 15, 181, 21))
+        self.argvTextEdit.setGeometry(QtCore.QRect(580, 15, 211, 21))
         self.argvTextEdit.setObjectName(_fromUtf8("argvTextEdit"))
         self.label_2 = QtGui.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(570, 15, 31, 20))
+        self.label_2.setGeometry(QtCore.QRect(550, 15, 31, 20))
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.stateLabel = QtGui.QLabel(self.centralwidget)
         self.stateLabel.setGeometry(QtCore.QRect(400, 50, 61, 21))

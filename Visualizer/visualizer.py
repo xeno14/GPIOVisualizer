@@ -4,7 +4,6 @@ from PyQt4 import QtCore, QtGui
 import subprocess
 import sys
 import os
-import sip
 
 
 if sys.platform.startswith("darwin"):
@@ -110,10 +109,11 @@ class GPIOVisualizer(object):
         self.createGPIO(ui.gridLayoutWidget, ui.gridLayout)
         self.setButtonOpen()
         self.setButtonKill()
-        self.setTextEdit(ui.textEdit)
 
         # @see setButtonOpen
         self.lastOpenPath = os.path.expanduser('~')
+
+        self.initLabels()
 
     def show(self):
         self.mainwindow.show()
@@ -125,13 +125,18 @@ class GPIOVisualizer(object):
         """
         if self.py:
             self.ui.stateLabel.setText("running")
-            self.proc = subprocess.Popen(['python', self.py, self.argv],
+            self.proc = subprocess.Popen(['python', self.py] + self.argv.split(),
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
             self.wathcer.setup(self.proc)
             self.err_watcher.setup(self.proc)
             self.wathcer.start()
             self.err_watcher.start()
+
+    def initLabels(self):
+        """initialize text in labels as default"""
+        self.ui.stateLabel.setText("waiting")
+        self.ui.subprocLabel.setText("")
 
     def createGPIO(self, widget, grid):
         """place pins in grid"""
@@ -168,18 +173,15 @@ class GPIOVisualizer(object):
         self.mainwindow.connect(self.ui.killButton, QtCore.SIGNAL("clicked()"),
                                 self.killSubprocess)
 
-    def setTextEdit(self, qtextedit):
-        self.textEdit = qtextedit
-
     def stdout(self, line):
-        self.textEdit.append(line)
+        self.ui.textEdit.append(line)
 
     def stderr(self, line):
         """append line to textedit in red
         """
-        self.textEdit.setTextColor(QtGui.QColor(0xff, 0, 0))
-        self.textEdit.append(line)
-        self.textEdit.setTextColor(QtGui.QColor(0, 0, 0))
+        self.ui.textEdit.setTextColor(QtGui.QColor(0xff, 0, 0))
+        self.ui.textEdit.append(line)
+        self.ui.textEdit.setTextColor(QtGui.QColor(0, 0, 0))
 
     def openFile(self):
         """select a file to run as subprocess"""
@@ -189,6 +191,7 @@ class GPIOVisualizer(object):
         # convert to normal string
         filename = str(filename)
         self.py = filename
+        # @todo split text smartly; aa "aa aa" bb -> ["aa","aa aa", "bb"]
         self.argv = str(self.ui.argvTextEdit.toPlainText())
         self.ui.subprocLabel.setText(os.path.basename(self.py) + " " + self.argv)
         self.lastOpenPath = os.path.dirname(filename)
@@ -212,6 +215,7 @@ class GPIOVisualizer(object):
 
     def subprocessStoped(self):
         self.ui.stateLabel.setText("waiting")
+        self.initLabels()
 
 
 class PinWidget(QtGui.QWidget):
