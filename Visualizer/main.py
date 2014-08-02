@@ -5,18 +5,16 @@ import ui_mainwindow
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    mainwindow = QtGui.QMainWindow()
     ui = ui_mainwindow.Ui_MainWindow()
-    ui.setupUi(mainwindow)
 
-    visualizer = visualizer.GPIOVisualizer(mainwindow)
+    visualizer = visualizer.GPIOVisualizer(ui)
+    #
+    # visualizer.createGPIO(ui.gridLayoutWidget,
+    #                       ui.gridLayout)
+    #
+    # visualizer.setButton(ui.pushButton, ui.label)
+    # visualizer.setTextEdit(ui.textEdit)
 
-    visualizer.createGPIO(ui.gridLayoutWidget,
-                          ui.gridLayout)
-
-    visualizer.setButton(ui.pushButton, ui.label)
-    visualizer.setTextEdit(ui.textEdit)
-
-    mainwindow.show()
+    visualizer.show()
 
     sys.exit(app.exec_())

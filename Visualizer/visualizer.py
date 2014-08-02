@@ -49,6 +49,7 @@ class Watcher(QtCore.QThread):
                     print line
                     self.visualizer.stdout(line)
                     continue
+        self.visualizer.subprocessStoped()
 
 
 class ErrWatcher(QtCore.QThread):
@@ -71,7 +72,7 @@ class ErrWatcher(QtCore.QThread):
 
     def run(self):
         """recieve stderr from child process"""
-        # for memory leak problem
+        # for memory leak problem on Mac
         if sys.platform.startswith("darwin"):
             Foundation.NSAutoreleasePool.alloc().init()
         for line in iter(self.proc.stderr.readline, ''):
@@ -79,6 +80,7 @@ class ErrWatcher(QtCore.QThread):
                 return
             line = line.rstrip()
             self.visualizer.stderr(line)
+        self.visualizer.subprocessStoped()
 
 
 class GPIOVisualizer(object):
@@ -98,11 +100,24 @@ class GPIOVisualizer(object):
             ('GND',     -1), ('GPIO_7',   7),
             ]
 
-    def __init__(self, mainwindow):
+    def __init__(self,  ui):
         super(GPIOVisualizer, self).__init__()
-        self.mainwindow = mainwindow
+        self.ui = ui
+        self.mainwindow = QtGui.QMainWindow()
+        self.ui.setupUi(self.mainwindow)
         self.wathcer = Watcher(self)
         self.err_watcher = ErrWatcher(self)
+
+        self.createGPIO(ui.gridLayoutWidget, ui.gridLayout)
+        self.setButtonOpen()
+        self.setButtonKill()
+        self.setTextEdit(ui.textEdit)
+
+        # @see setButtonOpen
+        self.lastOpenPath = os.path.expanduser('~')
+
+    def show(self):
+        self.mainwindow.show()
 
     def start(self):
         """start subprocess
@@ -111,12 +126,13 @@ class GPIOVisualizer(object):
         """
         if self.py:
             print "start", self.py, "!!!!!"
-            proc = subprocess.Popen(['python', self.py],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            self.wathcer.setup(proc)
+            self.ui.stateLabel.setText("running")
+            self.proc = subprocess.Popen(['python', self.py],
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            self.wathcer.setup(self.proc)
+            self.err_watcher.setup(self.proc)
             self.wathcer.start()
-            self.err_watcher.setup(proc)
             self.err_watcher.start()
 
     def createGPIO(self, widget, grid):
@@ -144,13 +160,15 @@ class GPIOVisualizer(object):
                 grid.addWidget(label_pin, row, 5, 1, 1)
                 grid.addWidget(label_boardpin, row, 4, 1, 1)
                 grid.addWidget(pinWidget, row, 3, 1, 2)
-
             index += 1
 
-    def setButton(self, qbutton, qlabel):
-        self.mainwindow.connect(qbutton, QtCore.SIGNAL("clicked()"),
+    def setButtonOpen(self):
+        self.mainwindow.connect(self.ui.pushButton, QtCore.SIGNAL("clicked()"),
                                 self.openFile)
-        self.labelFileName = qlabel
+
+    def setButtonKill(self):
+        self.mainwindow.connect(self.ui.killButton, QtCore.SIGNAL("clicked()"),
+                                self.killSubprocess)
 
     def setTextEdit(self, qtextedit):
         self.textEdit = qtextedit
@@ -161,19 +179,25 @@ class GPIOVisualizer(object):
     def stderr(self, line):
         """append line to textedit in red
         """
-        self.textEdit.setTextColor(QtGui.QColor(0xff,0,0))
+        self.textEdit.setTextColor(QtGui.QColor(0xff, 0, 0))
         self.textEdit.append(line)
-        self.textEdit.setTextColor(QtGui.QColor(0,0,0))
+        self.textEdit.setTextColor(QtGui.QColor(0, 0, 0))
 
     def openFile(self):
         """select a file to run as subprocess"""
-        filename = QtGui.QFileDialog.getOpenFileName(
-                self.mainwindow, 'Open file', os.path.expanduser('~'))
-        # self.labelFileName.setText(filename)
-        filename = str(filename)        #convert to normal string
-        self.py = filename              #start subprocess!!
-        self.labelFileName.setText(os.path.basename(filename))
+        filename = QtGui.QFileDialog.getOpenFileName(self.mainwindow,
+                                                     'Open file',
+                                                     self.lastOpenPath)
+        # convert to normal string
+        filename = str(filename)
+        self.py = filename
+        # self.labelFileName.setText(os.path.basename(filename))
+        self.lastOpenPath = os.path.dirname(filename)
         self.start()
+
+    def killSubprocess(self):
+        """" kill subprocess if it is running """
+        self.proc.kill()
 
     def createLabel(self, name):
         """create label pin's description"""
@@ -186,6 +210,9 @@ class GPIOVisualizer(object):
         if self.pinWidgets is not None:
             self.pinWidgets[channel].state = state
             self.pinWidgets[channel].repaint()
+
+    def subprocessStoped(self):
+        self.ui.stateLabel.setText("waiting")
 
 
 class PinWidget(QtGui.QWidget):
