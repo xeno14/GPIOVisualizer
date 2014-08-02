@@ -46,7 +46,6 @@ class Watcher(QtCore.QThread):
                     state = True if splited[2] == "1" else False
                     self.visualizer.output(channel, state)
                 else:
-                    print line
                     self.visualizer.stdout(line)
                     continue
         self.visualizer.subprocessStoped()
@@ -125,9 +124,8 @@ class GPIOVisualizer(object):
         @param py python to run
         """
         if self.py:
-            print "start", self.py, "!!!!!"
             self.ui.stateLabel.setText("running")
-            self.proc = subprocess.Popen(['python', self.py],
+            self.proc = subprocess.Popen(['python', self.py, self.argv],
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
             self.wathcer.setup(self.proc)
@@ -191,7 +189,8 @@ class GPIOVisualizer(object):
         # convert to normal string
         filename = str(filename)
         self.py = filename
-        # self.labelFileName.setText(os.path.basename(filename))
+        self.argv = str(self.ui.argvTextEdit.toPlainText())
+        self.ui.subprocLabel.setText(os.path.basename(self.py) + " " + self.argv)
         self.lastOpenPath = os.path.dirname(filename)
         self.start()
 

@@ -1,8 +1,11 @@
 import sys, time
 import RPi.GPIO as GPIO
+import sys
 
 if __name__ == '__main__':
     """Blinking GPIO_4 and GPIO_7"""
+
+    print sys.argv
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(4, GPIO.OUT)

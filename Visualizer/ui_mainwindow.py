@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'visualizer.ui'
 #
-# Created: Sun Aug  3 02:34:24 2014
+# Created: Sun Aug  3 02:48:29 2014
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,13 +32,13 @@ class Ui_MainWindow(object):
         self.textEdit = QtGui.QTextEdit(self.centralwidget)
         self.textEdit.setGeometry(QtCore.QRect(400, 80, 391, 471))
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
-        self.label = QtGui.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(470, 50, 321, 21))
-        self.label.setText(_fromUtf8(""))
-        self.label.setObjectName(_fromUtf8("label"))
-        self.argsTextEdit = QtGui.QPlainTextEdit(self.centralwidget)
-        self.argsTextEdit.setGeometry(QtCore.QRect(610, 15, 181, 21))
-        self.argsTextEdit.setObjectName(_fromUtf8("argsTextEdit"))
+        self.subprocLabel = QtGui.QLabel(self.centralwidget)
+        self.subprocLabel.setGeometry(QtCore.QRect(470, 50, 321, 21))
+        self.subprocLabel.setText(_fromUtf8(""))
+        self.subprocLabel.setObjectName(_fromUtf8("subprocLabel"))
+        self.argvTextEdit = QtGui.QPlainTextEdit(self.centralwidget)
+        self.argvTextEdit.setGeometry(QtCore.QRect(610, 15, 181, 21))
+        self.argvTextEdit.setObjectName(_fromUtf8("argvTextEdit"))
         self.label_2 = QtGui.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(570, 15, 31, 20))
         self.label_2.setObjectName(_fromUtf8("label_2"))
