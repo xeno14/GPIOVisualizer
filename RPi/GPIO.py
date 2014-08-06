@@ -86,7 +86,6 @@ def cleanup():
 def input(channel):
     if gpiomode == BOARD:
         channel = pintogpio[REV][channel]
-        sys.stdout.flush()
     return state[channel]
 
 

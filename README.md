@@ -15,15 +15,14 @@ Each color indicates:
 
 - PyQt4
 
-## Usage
+## Install
 
-1. Place `RPi` into your working directory. 
-1. run `Visualizer/main.py`
-1. open your python file and it will start automatically
+1. `python setup.py install`
+2. On MacOSX, `python setup.py py2app`
 
-## ATTENTION
+## Run
 
-- When you run on Raspberry Pi, RPi directory in this repository should be removed.
+`python GPIOVisualizer/main.py` or run `dist/GPIOVisualizer.app`
 
 ## License
 
