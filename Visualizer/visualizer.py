@@ -40,7 +40,7 @@ class Watcher(QtCore.QThread):
             splited = line.split(' ')
             if splited:
                 prefix = splited[0]
-                if prefix == "__GPIO__":
+                if prefix == "__GPIO_OUTPUT__":
                     channel = int(splited[1])
                     state = True if splited[2] == "1" else False
                     self.visualizer.output(channel, state)
@@ -125,7 +125,7 @@ class GPIOVisualizer(object):
         """
         if self.py:
             self.ui.stateLabel.setText("running")
-            self.proc = subprocess.Popen(['python', self.py] + self.argv.split(),
+            self.proc = subprocess.Popen(['python', self.py]+self.argv.split(),
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
             self.wathcer.setup(self.proc)
@@ -193,7 +193,7 @@ class GPIOVisualizer(object):
         self.py = filename
         # @todo split text smartly; aa "aa aa" bb -> ["aa","aa aa", "bb"]
         self.argv = str(self.ui.argvTextEdit.toPlainText())
-        self.ui.subprocLabel.setText(os.path.basename(self.py) + " " + self.argv)
+        self.ui.subprocLabel.setText(os.path.basename(self.py)+" "+self.argv)
         self.lastOpenPath = os.path.dirname(filename)
         self.start()
 
